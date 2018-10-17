@@ -16,7 +16,7 @@ sealed trait Error
 case object ZeroBalance extends Error
 case object PlayerAlreadyConnected extends Error
 
-case class RollRequest(userId: String) extends MessagingProtocol
+case object RollRequest extends MessagingProtocol
 case class RollResponse(screen: Seq[Seq[Int]], win: Long) extends MessagingProtocol
 
 case object TakeWinRequest extends MessagingProtocol
