@@ -1,7 +1,9 @@
 package io.lvivscalaclub.akka_actor_game
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props}
+import io.lvivscalaclub.akka_actor_game.models.Card
 
+import scala.concurrent.duration._
 import scala.util.Random
 
 object Main extends App {
@@ -10,7 +12,7 @@ object Main extends App {
   val props = Props[PlayerSupervisor]
   val supervisor = actorSystem.actorOf(props, "Supervisor")
   createSlotMachine(supervisor, "user1")
-  createSlotMachine(supervisor, "user1")
+  createSlotMachine(supervisor, "user2")
 
   def createSlotMachine(supervisor: ActorRef, user: String): ActorRef = {
     val propsWebClient = Props(new SlotMachine(supervisor, user))
@@ -21,10 +23,39 @@ object Main extends App {
 class SlotMachine(supervisor: ActorRef, user: String) extends Actor with ActorLogging {
   supervisor ! NewGameRequest("newGame", user)
 
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   override def receive = {
-    case NewGameResponse(Success, None) => log.info("Response ok!")
-    case NewGameResponse(Failure, Some(err)) => log.info(s"Response fail: $err!")
-    case Balance(credits) => log.info(s"Balance $credits")
+    case NewGameResponse(Success, None) =>
+      log.info("Response ok!")
+
+    case RollResponse(screen, win) =>
+      log.info(s"Roll response: $win")
+      bonusGame(win)
+
+    case NewGameResponse(Failure, Some(err)) =>
+      log.info(s"Response fail: $err!")
+
+    case Balance(credits) =>
+      log.info(s"Balance $credits")
+      context.system.scheduler.scheduleOnce(2.seconds, sender, RollRequest)
+
+    case DoubleResponse(win) =>
+      log.info(s"Double Response: $win")
+      bonusGame(win)
+  }
+
+  private def bonusGame(win: Long) = {
+    if (win > 0) {
+      val bonusGame = Random.nextBoolean()
+      log.info(s"Bonus game: $bonusGame")
+      if (bonusGame) {
+        sender ! GoToDoubleRequest
+        sender ! DoubleRequest(Card.Black)
+      } else {
+        sender ! TakeWinRequest
+      }
+    }
   }
 }
 
@@ -37,14 +68,13 @@ class PlayerSupervisor extends Actor with ActorLogging {
         case Some(_) =>
           sender() ! NewGameResponse(Failure, Some(PlayerAlreadyConnected))
         case None =>
-          val playerActor = context.actorOf(Props[Player], userId)
+          val playerActor = context.actorOf(Props(new Player(userId)), userId)
           playerActor.forward(g)
       }
-
   }
 }
 
-class Player extends Actor with ActorLogging {
+class Player(userId: String) extends Actor with ActorLogging {
 
   private val RollCost = 1
 
@@ -72,6 +102,7 @@ class Player extends Actor with ActorLogging {
 
   def takeWinOrGoToDoubleState(win: Long, step: Int = 5): Receive = {
     case TakeWinRequest =>
+      log.info(s"Take win: $win")
       balance = balance + win
       sender ! Balance(balance)
       context.become(RollState)
@@ -81,23 +112,27 @@ class Player extends Actor with ActorLogging {
   }
 
   val RollState: Receive = {
-    case RollRequest(_) =>
-      balance = balance - RollCost
-      val isWin = Random.nextBoolean()
-      val screen = if(isWin) {
-        Seq.fill(3){
-          val n = Random.nextInt(9)
-          Seq.fill(5)(n)
-        }
+    case RollRequest =>
+      if (balance < RollCost) {
+        context.self ! PoisonPill
       } else {
-        Seq.fill(3)(Seq.fill(5)(Random.nextInt(9)))
-      }
-      val win = if(isWin) Random.nextInt(20) + 1 else 0
-      sender ! RollResponse(screen, win)
-      sender ! Balance(balance)
+        balance = balance - RollCost
+        val isWin = Random.nextBoolean()
+        val screen = if (isWin) {
+          Seq.fill(3) {
+            val n = Random.nextInt(9)
+            Seq.fill(5)(n)
+          }
+        } else {
+          Seq.fill(3)(Seq.fill(5)(Random.nextInt(9)))
+        }
+        val win = if (isWin) Random.nextInt(20) + 1 else 0
+        sender ! RollResponse(screen, win)
+        sender ! Balance(balance)
 
-      if(isWin) {
-        context.become(takeWinOrGoToDoubleState(win))
+        if (isWin) {
+          context.become(takeWinOrGoToDoubleState(win))
+        }
       }
   }
 
