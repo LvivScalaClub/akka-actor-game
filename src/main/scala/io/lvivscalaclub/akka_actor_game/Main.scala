@@ -74,12 +74,12 @@ class PlayerSupervisor extends Actor with ActorLogging {
   }
 }
 
-class Player(userId: String) extends Actor with ActorLogging {
+class Player(userId: String, initBalance: Long = 20) extends Actor with ActorLogging {
 
   private val RollCost = 1
 
   // TODO: refactor using [[akka.actor.FSM]] when the time will come.
-  private var balance: Long = 20
+  private var balance: Long = initBalance
 
   def takeDoubleRequestState(win: Long, step: Int): Receive = {
     case DoubleRequest(_) =>
