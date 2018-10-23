@@ -81,7 +81,7 @@ class Player(userId: String, initBalance: Long = 20) extends Actor with ActorLog
   // TODO: refactor using [[akka.actor.FSM]] when the time will come.
   private var balance: Long = initBalance
 
-  def takeDoubleRequestState(win: Long, step: Int): Receive = {
+  def doubleRequestState(win: Long, step: Int): Receive = {
     case DoubleRequest(_) =>
       val isWin = Random.nextBoolean()
       if(isWin) {
@@ -108,7 +108,7 @@ class Player(userId: String, initBalance: Long = 20) extends Actor with ActorLog
       context.become(RollState)
 
     case GoToDoubleRequest if step > 0 =>
-      context.become(takeDoubleRequestState(win, step))
+      context.become(doubleRequestState(win, step))
   }
 
   val RollState: Receive = {
