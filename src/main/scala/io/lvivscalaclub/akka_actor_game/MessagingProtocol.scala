@@ -24,3 +24,5 @@ case object GoToDoubleRequest extends MessagingProtocol
 
 case class DoubleRequest(card: Card) extends MessagingProtocol
 case class DoubleResponse(win: Long) extends MessagingProtocol
+
+case class IllegalRequest(request: String) extends MessagingProtocol
