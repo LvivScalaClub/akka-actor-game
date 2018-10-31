@@ -2,7 +2,7 @@ package io.lvivscalaclub.akka_actor_game
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
-import io.lvivscalaclub.akka_actor_game.server.Player
+import io.lvivscalaclub.akka_actor_game.server.{DefaultRandomGenerator, Player, RandomGenerator}
 import org.scalatest.{BeforeAndAfterAll, FreeSpecLike, Matchers}
 
 class PlayerSpec

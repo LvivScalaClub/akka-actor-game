@@ -1,13 +1,13 @@
 package io.lvivscalaclub.akka_actor_game.client
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
 import io.lvivscalaclub.akka_actor_game.{Balance, DoubleRequest, DoubleResponse, Failure, GoToDoubleRequest, NewGameRequest, NewGameResponse, RollRequest, RollResponse, Success, TakeWinRequest}
 import io.lvivscalaclub.akka_actor_game.models.Card
 
 import scala.concurrent.duration._
 import scala.util.Random
 
-class SlotMachine(supervisor: ActorRef, user: String) extends Actor with ActorLogging {
+class SlotMachine(supervisor: ActorSelection, user: String) extends Actor with ActorLogging {
   supervisor ! NewGameRequest("newGame", user)
 
   import scala.concurrent.ExecutionContext.Implicits.global

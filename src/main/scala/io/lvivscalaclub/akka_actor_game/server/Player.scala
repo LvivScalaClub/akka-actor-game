@@ -1,7 +1,7 @@
 package io.lvivscalaclub.akka_actor_game.server
 
 import akka.actor.{Actor, ActorLogging, PoisonPill}
-import io.lvivscalaclub.akka_actor_game.{Balance, DefaultRandomGenerator, DoubleRequest, DoubleResponse, Failure, GoToDoubleRequest, IllegalRequest, NewGameRequest, NewGameResponse, RandomGenerator, RollRequest, RollResponse, Success, TakeWinRequest, ZeroBalance}
+import io.lvivscalaclub.akka_actor_game.{Balance, DoubleRequest, DoubleResponse, Failure, GoToDoubleRequest, IllegalRequest, NewGameRequest, NewGameResponse, RollRequest, RollResponse, Success, TakeWinRequest, ZeroBalance}
 
 import scala.util.Random
 
